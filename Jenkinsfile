@@ -4,10 +4,7 @@ pipeline {
 
     environment {
         AWS_REGION = 'ap-south-1'
-        AWS_ACCOUNT_ID = '123456789012'
-        ECR_REPO = 'flask-jenkins-demo'
-        IMAGE_TAG = "latest"
-        IMAGE_URI = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO}:${IMAGE_TAG}"
+        ECR_REPO = '123456789012.dkr.ecr.ap-south-1.amazonaws.com/flask-jenkins-demo'
     }
 
     stages {
@@ -19,23 +16,25 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                sh 'docker build -t $IMAGE_URI .'
+                sh 'docker build -t $ECR_REPO:latest .'
             }
         }
 
         stage('Login to AWS ECR') {
             steps {
-                sh '''
-                aws ecr get-login-password --region $AWS_REGION \
-                | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
-                '''
+                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials']]) {
+                    sh '''
+                        aws ecr get-login-password --region $AWS_REGION | \
+                        docker login --username AWS --password-stdin $ECR_REPO
+                    '''
+                }
             }
         }
 
         stage('Push to ECR') {
             steps {
                 sh '''
-                docker push $IMAGE_URI
+                    docker push $ECR_REPO:latest
                 '''
             }
         }
@@ -43,7 +42,7 @@ pipeline {
         stage('Clean up local images') {
             steps {
                 sh '''
-                docker rmi $IMAGE_URI || true
+                    docker rmi $ECR_REPO:latest || true
                 '''
             }
         }
@@ -51,7 +50,7 @@ pipeline {
 
     post {
         success {
-            echo "✅ Successfully pushed image to ECR: $IMAGE_URI"
+            echo "✅ Build and Push completed successfully!"
         }
         failure {
             echo "❌ Build failed. Check logs for errors."
