@@ -3,59 +3,58 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME = "flask-jenkins-demo"
-        CONTAINER_NAME = "flask-jenkins-container"
+        AWS_REGION = 'ap-south-1'
+        AWS_ACCOUNT_ID = '123456789012'
+        ECR_REPO = 'flask-jenkins-demo'
+        IMAGE_TAG = "latest"
+        IMAGE_URI = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO}:${IMAGE_TAG}"
     }
 
     stages {
         stage('Checkout') {
             steps {
-                echo 'Checking out source code...'
                 checkout scm
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                echo 'Building Docker image...'
-                sh 'docker build -t $IMAGE_NAME .'
+                sh 'docker build -t $IMAGE_URI .'
             }
         }
 
-        stage('Run Container') {
+        stage('Login to AWS ECR') {
             steps {
-                echo 'Running container...'
                 sh '''
-                docker ps -q --filter "name=$CONTAINER_NAME" | grep -q . && docker stop $CONTAINER_NAME && docker rm $CONTAINER_NAME || true
-                docker run -d --name $CONTAINER_NAME -p 5000:5000 $IMAGE_NAME
+                aws ecr get-login-password --region $AWS_REGION \
+                | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
                 '''
             }
         }
 
-        stage('Test Application') {
+        stage('Push to ECR') {
             steps {
-                echo 'Testing application endpoint...'
                 sh '''
-                sleep 5
-                curl -f http://localhost:5000 || (echo "App failed to start" && exit 1)
+                docker push $IMAGE_URI
+                '''
+            }
+        }
+
+        stage('Clean up local images') {
+            steps {
+                sh '''
+                docker rmi $IMAGE_URI || true
                 '''
             }
         }
     }
 
     post {
-        always {
-            echo 'Cleaning up...'
-            sh '''
-            docker stop $CONTAINER_NAME || true
-            docker rm $CONTAINER_NAME || true
-            '''
-        }
         success {
-            echo 'Pipeline completed successfully ✅'
+            echo "✅ Successfully pushed image to ECR: $IMAGE_URI"
         }
         failure {
-            echo 'Pipeline failed ❌'
+            echo "❌ Build failed. Check logs for errors."
         }
     }
 }
