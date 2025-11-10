@@ -57,3 +57,23 @@ pipeline {
         }
     }
 }
+
+
+post {
+    success {
+        emailext (
+            to: 'your_email@gmail.com',
+            subject: "✅ SUCCESS: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+            body: """<p>Build <b>${env.JOB_NAME} #${env.BUILD_NUMBER}</b> succeeded!</p>
+                     <p><a href='${env.BUILD_URL}'>View Build Logs</a></p>"""
+        )
+    }
+    failure {
+        emailext (
+            to: 'your_email@gmail.com',
+            subject: "❌ FAILURE: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+            body: """<p>Build <b>${env.JOB_NAME} #${env.BUILD_NUMBER}</b> failed.</p>
+                     <p><a href='${env.BUILD_URL}'>View Build Logs</a></p>"""
+        )
+    }
+}
