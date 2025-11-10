@@ -4,7 +4,7 @@ pipeline {
 
     environment {
         AWS_REGION = 'ap-south-1'
-        ECR_REPO = '123456789012.dkr.ecr.ap-south-1.amazonaws.com/flask-jenkins-demo'
+        ECR_REPO = '457606182356.dkr.ecr.ap-south-1.amazonaws.com/flask-jenkins-demo'
     }
 
     stages {
