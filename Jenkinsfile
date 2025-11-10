@@ -80,4 +80,4 @@ if (currentBuild.result == 'SUCCESS') {
         mimeType: 'text/html'
     )
 }
-}
+
