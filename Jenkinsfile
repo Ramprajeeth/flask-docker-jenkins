@@ -65,7 +65,7 @@ currentBuild.result = currentBuild.result ?: 'SUCCESS'
 
 if (currentBuild.result == 'SUCCESS') {
     emailext (
-        to: 'your_email@gmail.com',
+        to: 'ramprajeeth.n@gmail.com',
         subject: "✅ SUCCESS: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
         body: """<p>Build <b>${env.JOB_NAME} #${env.BUILD_NUMBER}</b> succeeded!</p>
                  <p><a href='${env.BUILD_URL}'>View Build Logs</a></p>""",
@@ -73,7 +73,7 @@ if (currentBuild.result == 'SUCCESS') {
     )
 } else {
     emailext (
-        to: 'your_email@gmail.com',
+        to: 'ramprajeeth.n@gmail.com',
         subject: "❌ FAILURE: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
         body: """<p>Build <b>${env.JOB_NAME} #${env.BUILD_NUMBER}</b> failed.</p>
                  <p><a href='${env.BUILD_URL}'>View Build Logs</a></p>""",
